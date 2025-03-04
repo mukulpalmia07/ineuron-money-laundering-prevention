@@ -57,7 +57,6 @@ if "model_trained" not in st.session_state:
 def train_model():
     """Triggers model training, removes old model if exists, and updates session state."""
     if st.session_state.model_trained:
-        st.warning("Removing previously trained model...")  # Notify user
         del st.session_state.trained_model  # Delete old model
 
     st.session_state.model_trained = False  # Mark as not trained
