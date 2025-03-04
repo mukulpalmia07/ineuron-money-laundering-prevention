@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.main import predict, start_model_training
 
-
 # --- Page Configuration --- #
 st.set_page_config(
     page_title='Money Laundering Prevention',
@@ -47,19 +46,18 @@ class BaseDF:
         yield 'typeofaction', self.typeofaction
         yield 'typeoffraud', self.typeoffraud
 
+# --- Reset model when app is reloaded --- #
+if "first_load" not in st.session_state:
+    st.session_state.first_load = True  # Mark the first load
+    st.session_state.model_trained = False  # Ensure model is not retained
+    if "trained_model" in st.session_state:
+        del st.session_state.trained_model  # Remove any existing trained model
+
 # --- Sidebar: Select Prediction Type --- #
 st.sidebar.title('Navigation')
 prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
 # --- Train Model Section --- #
-# Ensure model training resets on every reload
-st.session_state.model_trained = False  
-
-# Remove trained model from memory when app reloads
-if 'trained_model' in st.session_state:
-    del st.session_state['trained_model']
-
-
 def train_model():
     """Triggers model training and updates session state."""
     try:
@@ -72,12 +70,9 @@ def train_model():
     st.success('Model training completed! 🎉')
     st.balloons()
 
-
-if not st.session_state.model_trained:
-    if st.sidebar.button('Train Model', use_container_width=True):
-        with st.spinner('Training model...'):
-            train_model()
-
+if st.sidebar.button('Train Model', use_container_width=True):
+    with st.spinner('Training model...'):
+        train_model()
 
 # --- Main Section: Form or Batch Prediction --- #
 base = None
