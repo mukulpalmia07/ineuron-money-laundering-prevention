@@ -12,23 +12,37 @@ st.set_page_config(
     initial_sidebar_state='expanded',
 )
 
-# --- Custom Styling --- #
-st.markdown(
-    """
-    <style>
-        .main-title { text-align: center; color: #007FFF; }
-        .header { display: flex; justify-content: center; align-items: center; }
-        .header img { height: 70px; }
-        .stButton button { width: 100%; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+# --- Sidebar Navigation --- #
+st.sidebar.title('Navigation')
+prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
-# --- Header --- #
-st.markdown('<div class="header"><img src="https://ineuron.ai/images/ineuron-logo.png" alt="Logo"></div>', unsafe_allow_html=True)
-st.markdown('<h2 class="main-title">Money Laundering Prevention System</h2>', unsafe_allow_html=True)
+# --- Initialize Session State for Model --- #
+if "model_trained" not in st.session_state:
+    st.session_state.model_trained = False  # Model is not trained initially
+    st.session_state.trained_model = None  # Ensure no model is stored
 
+def train_model():
+    """Triggers model training, removes old model if exists, and updates session state."""
+    if st.session_state.model_trained:
+        st.warning("Removing previously trained model...")  # Notify user
+        st.session_state.trained_model = None  # Remove existing model
+
+    with st.spinner("Training model..."):
+        try:
+            model = start_model_training()  # Train the model
+        except Exception:
+            model = start_model_training(Path('data/base_data.csv'))
+        
+        st.session_state.trained_model = model  # Store model in session state
+        st.session_state.model_trained = True  # Mark as trained
+        st.success("Model training completed! 🎉")
+        st.balloons()
+
+# --- Train Model Button --- #
+if st.sidebar.button("Train Model", use_container_width=True):
+    train_model()
+
+# --- Prediction Logic --- #
 @dataclass
 class BaseDF:
     sourceid: int
@@ -46,36 +60,6 @@ class BaseDF:
         yield 'typeofaction', self.typeofaction
         yield 'typeoffraud', self.typeoffraud
 
-# --- Sidebar: Select Prediction Type --- #
-st.sidebar.title('Navigation')
-prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
-
-# --- Initialize Session State for Model --- #
-if "model_trained" not in st.session_state:
-    st.session_state.model_trained = False  # Model is not trained initially
-
-def train_model():
-    """Triggers model training, removes old model if exists, and updates session state."""
-    if st.session_state.model_trained:
-        del st.session_state.trained_model  # Delete old model
-
-    st.session_state.model_trained = False  # Mark as not trained
-    with st.spinner("Training model..."):
-        try:
-            model = start_model_training()  # Train the model
-        except Exception:
-            model = start_model_training(Path('data/base_data.csv'))
-        
-        st.session_state.trained_model = model  # Store model in session state
-        st.session_state.model_trained = True  # Mark as trained
-        st.success("Model training completed! 🎉")
-        st.balloons()
-
-# --- Train Model Button --- #
-if st.sidebar.button("Train Model", use_container_width=True):
-    train_model()
-
-# --- Main Section: Form or Batch Prediction --- #
 base = None
 msg = st.empty()
 
@@ -110,19 +94,17 @@ else:  # Batch Prediction
 if base is not None:
     if isinstance(base, BaseDF):
         df = pd.DataFrame([dict(base)])
-        try:
-            _, prediction = predict(df)
-        except FileNotFoundError:
+        if st.session_state.trained_model is None:
             msg.error('Model is not trained yet. Please train the model first.', icon='🔥')
         else:
+            _, prediction = predict(df)
             result, color = ('Fraud', 'red') if prediction == 1 else ('Not Fraud', 'green')
             st.subheader(f':{color}[The transaction is {result}.]')
     elif isinstance(base, pd.DataFrame):
-        try:
-            pred_df, _ = predict(base)
-        except FileNotFoundError:
+        if st.session_state.trained_model is None:
             msg.error('Model is not trained yet. Please train the model first.', icon='🤖')
         else:
+            pred_df, _ = predict(base)
             st.balloons()
             msg.success('Download the predicted data file.')
             st.download_button(
