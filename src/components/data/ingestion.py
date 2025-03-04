@@ -27,6 +27,13 @@ class DataIngestion(DataIngestionConfig):
             logger.info('Extra column dropped: %s', drop_cols)
         return df
 
+    def _convert_to_datetime(self, df: pd.DataFrame) -> pd.DataFrame:
+        date_cols = self.schema.date_cols
+        for i in date_cols:
+            df[i] = pd.to_datetime(df[i])
+        logger.info('Conversion to datetime data type of %s column(s)', date_cols)
+        return df
+
     def _feature_extraction(self, df: pd.DataFrame) -> pd.DataFrame:
         """Feature extraction from DataFrame."""
         df['month'] = df[self.schema.date_cols[0]].dt.month
@@ -55,6 +62,7 @@ class DataIngestion(DataIngestionConfig):
             df = pd.read_csv(ingestion_data_path)
 
         df = self._drop_extra_cols(df)
+        df = self._convert_to_datetime(df)
         df = self._feature_extraction(df)
 
         logger.info('Splitting the dataset into train_df and test_df and exporting it.')
