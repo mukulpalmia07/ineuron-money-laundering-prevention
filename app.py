@@ -46,33 +46,35 @@ class BaseDF:
         yield 'typeofaction', self.typeofaction
         yield 'typeoffraud', self.typeoffraud
 
-# --- Reset model when app is reloaded --- #
-if "first_load" not in st.session_state:
-    st.session_state.first_load = True  # Mark the first load
-    st.session_state.model_trained = False  # Ensure model is not retained
-    if "trained_model" in st.session_state:
-        del st.session_state.trained_model  # Remove any existing trained model
-
 # --- Sidebar: Select Prediction Type --- #
 st.sidebar.title('Navigation')
 prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
-# --- Train Model Section --- #
-def train_model():
-    """Triggers model training and updates session state."""
-    try:
-        model = start_model_training()  # Train the model
-    except Exception:
-        model = start_model_training(Path('data/base_data.csv'))
-    
-    st.session_state.trained_model = model  # Store model in session state
-    st.session_state.model_trained = True  # Mark training as done
-    st.success('Model training completed! 🎉')
-    st.balloons()
+# --- Initialize Session State for Model --- #
+if "model_trained" not in st.session_state:
+    st.session_state.model_trained = False  # Model is not trained initially
 
-if st.sidebar.button('Train Model', use_container_width=True):
-    with st.spinner('Training model...'):
-        train_model()
+def train_model():
+    """Triggers model training, removes old model if exists, and updates session state."""
+    if st.session_state.model_trained:
+        st.warning("Removing previously trained model...")  # Notify user
+        del st.session_state.trained_model  # Delete old model
+
+    st.session_state.model_trained = False  # Mark as not trained
+    with st.spinner("Training model..."):
+        try:
+            model = start_model_training()  # Train the model
+        except Exception:
+            model = start_model_training(Path('data/base_data.csv'))
+        
+        st.session_state.trained_model = model  # Store model in session state
+        st.session_state.model_trained = True  # Mark as trained
+        st.success("Model training completed! 🎉")
+        st.balloons()
+
+# --- Train Model Button --- #
+if st.sidebar.button("Train Model", use_container_width=True):
+    train_model()
 
 # --- Main Section: Form or Batch Prediction --- #
 base = None
