@@ -52,7 +52,7 @@ prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from F
 
 # --- Train Model Section --- #
 if 'model_trained' not in st.session_state:
-    st.session_state.model_trained = False
+    st.session_state.model_trained = False  # Default state
 
 def train_model():
     """Triggers model training and updates session state."""
@@ -64,6 +64,7 @@ def train_model():
     st.success('Model training completed! 🎉')
     st.balloons()
 
+# Show "Train Model" button **only if the model is NOT trained**
 if not st.session_state.model_trained:
     if st.sidebar.button('Train Model', use_container_width=True):
         with st.spinner('Training model...'):
