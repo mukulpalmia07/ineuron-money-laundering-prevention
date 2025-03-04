@@ -4,9 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.main import predict, start_model_training
 
-if 'initialized' not in st.session_state:
-    st.session_state['initialized'] = True
-    st.experimental_rerun()
 
 # --- Page Configuration --- #
 st.set_page_config(
@@ -55,26 +52,31 @@ st.sidebar.title('Navigation')
 prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
 # --- Train Model Section --- #
-st.session_state.model_trained = False  # Reset training state on app reload
+# Ensure model training resets on every reload
+st.session_state.model_trained = False  
+
+# Remove trained model from memory when app reloads
+if 'trained_model' in st.session_state:
+    del st.session_state['trained_model']
 
 
 def train_model():
     """Triggers model training and updates session state."""
     try:
-        start_model_training()
+        model = start_model_training()  # Train the model
     except Exception:
-        start_model_training(Path('data/base_data.csv'))
+        model = start_model_training(Path('data/base_data.csv'))
     
-    st.session_state.model_trained = True
+    st.session_state.trained_model = model  # Store model in session state
+    st.session_state.model_trained = True  # Mark training as done
     st.success('Model training completed! 🎉')
     st.balloons()
-    
-    # Remove trained model from memory after execution
-    del st.session_state['model_trained']
 
 
-with st.spinner('Training model at startup...'):
-    train_model()
+if not st.session_state.model_trained:
+    if st.sidebar.button('Train Model', use_container_width=True):
+        with st.spinner('Training model...'):
+            train_model()
 
 
 # --- Main Section: Form or Batch Prediction --- #
