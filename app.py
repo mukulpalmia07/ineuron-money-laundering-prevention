@@ -73,10 +73,9 @@ def train_model():
     del st.session_state['model_trained']
 
 
+with st.spinner('Training model at startup...'):
+    train_model()
 
-if st.sidebar.button('Train Model', use_container_width=True):
-    with st.spinner('Training model...'):
-        train_model()
 
 # --- Main Section: Form or Batch Prediction --- #
 base = None
