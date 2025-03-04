@@ -87,7 +87,7 @@ if prediction_type == 'Prediction from Form':
             month = st.number_input('Transaction Month', min_value=1, max_value=12, value=3, step=1, format='%d')
             typeoffraud = st.selectbox('Type of Fraud', ['type1', 'type2', 'type3', 'none'])
 
-        if st.form_submit_button('Predict'):
+        if st.form_submit_button('Submit'):
             base = BaseDF(sourceid, destinationid, amountofmoney, month, typeofaction, typeoffraud)
 
 else:  # Batch Prediction
