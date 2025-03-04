@@ -65,9 +65,13 @@ def train_model():
     except Exception:
         start_model_training(Path('data/base_data.csv'))
     
-    st.session_state.model_trained = True  # Mark model as trained
+    st.session_state.model_trained = True
     st.success('Model training completed! 🎉')
     st.balloons()
+    
+    # Remove trained model from memory after execution
+    del st.session_state['model_trained']
+
 
 
 if st.sidebar.button('Train Model', use_container_width=True):
