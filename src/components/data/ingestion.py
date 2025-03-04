@@ -55,7 +55,6 @@ class DataIngestion(DataIngestionConfig):
             df = pd.read_csv(ingestion_data_path)
 
         df = self._drop_extra_cols(df)
-        df = self._convert_to_datetime(df)
         df = self._feature_extraction(df)
 
         logger.info('Splitting the dataset into train_df and test_df and exporting it.')
