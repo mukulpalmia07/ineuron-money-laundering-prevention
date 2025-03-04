@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.main import predict, start_model_training
 
+# --- Force Reset Session State on Refresh --- #
+for key in list(st.session_state.keys()):
+    del st.session_state[key]
+
 # --- Page Configuration --- #
 st.set_page_config(
     page_title='Money Laundering Prevention',
@@ -50,27 +54,24 @@ class BaseDF:
 st.sidebar.title('Navigation')
 prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
-# --- Persist Training State --- #
-if 'model_trained' not in st.session_state:
-    st.session_state['model_trained'] = False  # Set default
+# --- Ensure Model Training is Reset on Refresh --- #
+st.session_state.model_trained = False
 
+# --- Train Model Section --- #
 def train_model():
     """Triggers model training and updates session state."""
     try:
         start_model_training()
-    except Exception:
-        start_model_training(Path('data/base_data.csv'))
-    
-    # Set session state to True so button disappears
-    st.session_state['model_trained'] = True
+    except FileNotFoundError:
+        st.error('Training data not found. Ensure "data/base_data.csv" exists.', icon='🚨')
+        return
+    st.session_state.model_trained = True
     st.success('Model training completed! 🎉')
     st.balloons()
 
-# --- Conditionally Show "Train Model" Button --- #
-if not st.session_state['model_trained']:
-    if st.sidebar.button('Train Model', use_container_width=True):
-        with st.spinner('Training model...'):
-            train_model()
+if st.sidebar.button('Train Model', use_container_width=True):
+    with st.spinner('Training model...'):
+        train_model()
 
 # --- Main Section: Form or Batch Prediction --- #
 base = None
@@ -101,7 +102,11 @@ else:  # Batch Prediction
             if upload is None:
                 st.error('Please upload a CSV file.', icon='🚨')
             else:
-                base = pd.read_csv(upload)
+                try:
+                    base = pd.read_csv(upload)
+                except Exception as e:
+                    st.error(f'Failed to read the CSV file. Error: {str(e)}')
+                    base = None
 
 # --- Processing Predictions --- #
 if base is not None:
