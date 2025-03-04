@@ -50,9 +50,9 @@ class BaseDF:
 st.sidebar.title('Navigation')
 prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
-# --- Train Model Section --- #
+# --- Persist Training State --- #
 if 'model_trained' not in st.session_state:
-    st.session_state.model_trained = False  # Default state
+    st.session_state['model_trained'] = False  # Set default
 
 def train_model():
     """Triggers model training and updates session state."""
@@ -60,12 +60,14 @@ def train_model():
         start_model_training()
     except Exception:
         start_model_training(Path('data/base_data.csv'))
-    st.session_state.model_trained = True
+    
+    # Set session state to True so button disappears
+    st.session_state['model_trained'] = True
     st.success('Model training completed! 🎉')
     st.balloons()
 
-# Show "Train Model" button **only if the model is NOT trained**
-if not st.session_state.model_trained:
+# --- Conditionally Show "Train Model" Button --- #
+if not st.session_state['model_trained']:
     if st.sidebar.button('Train Model', use_container_width=True):
         with st.spinner('Training model...'):
             train_model()
