@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.main import predict, start_model_training
 
+if 'initialized' not in st.session_state:
+    st.session_state['initialized'] = True
+    st.experimental_rerun()
+
 # --- Page Configuration --- #
 st.set_page_config(
     page_title='Money Laundering Prevention',
@@ -51,8 +55,8 @@ st.sidebar.title('Navigation')
 prediction_type = st.sidebar.radio('Select Prediction Type', ['Prediction from Form', 'Batch Prediction'])
 
 # --- Train Model Section --- #
-if 'model_trained' not in st.session_state:
-    st.session_state.model_trained = False
+st.session_state.model_trained = False  # Reset training state on app reload
+
 
 def train_model():
     """Triggers model training and updates session state."""
@@ -60,14 +64,15 @@ def train_model():
         start_model_training()
     except Exception:
         start_model_training(Path('data/base_data.csv'))
-    st.session_state.model_trained = True
+    
+    st.session_state.model_trained = True  # Mark model as trained
     st.success('Model training completed! 🎉')
     st.balloons()
 
-if not st.session_state.model_trained:
-    if st.sidebar.button('Train Model', use_container_width=True):
-        with st.spinner('Training model...'):
-            train_model()
+
+if st.sidebar.button('Train Model', use_container_width=True):
+    with st.spinner('Training model...'):
+        train_model()
 
 # --- Main Section: Form or Batch Prediction --- #
 base = None
