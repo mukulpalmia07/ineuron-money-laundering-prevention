@@ -82,7 +82,7 @@ This project implements an AI-powered **Money Laundering Prevention System** to 
 ```
 4. **Run the Streamlit Application**
 ```bash
-   streamlit run streamlit_app/app.py
+   streamlit run app.py
 ```
 
 ## 📸 UI Screenshot
