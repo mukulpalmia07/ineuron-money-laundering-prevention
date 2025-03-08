@@ -29,7 +29,7 @@ This project implements an AI-powered **Money Laundering Prevention System** to 
  ├── 📁 data                
  ├── 📁 ineuron docs
       ├── Architecture
-      ├── Detail Project Report
+      ├── Detailed Project Report
       ├── High Level Document
       ├── Low Level Document
       ├── Wireframe
